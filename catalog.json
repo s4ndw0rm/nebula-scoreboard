@@ -1,0 +1,19 @@
+{
+  "course": "Nebula Cadet Program",
+  "station": "VEGA-7",
+  "labs": [
+    {
+      "id": "lab01",
+      "day": 1,
+      "title": "Linux I - Welcome aboard Vega-7",
+      "challenges": [
+        {"id": "lab01-1", "slug": "welcome_aboard",        "title": "First Contact",        "points": 100},
+        {"id": "lab01-2", "slug": "hidden_in_plain_sight", "title": "Hidden in Plain Sight", "points": 100},
+        {"id": "lab01-3", "slug": "station_config_found",  "title": "Station Map",          "points": 100},
+        {"id": "lab01-4", "slug": "captains_private_log",  "title": "The Captain's Log",    "points": 200},
+        {"id": "lab01-5", "slug": "not_what_it_seems",     "title": "Not What It Seems",    "points": 200},
+        {"id": "lab01-6", "slug": "deck_is_tidy",          "title": "Tidy Up the Deck",     "points": 300}
+      ]
+    }
+  ]
+}
