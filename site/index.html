@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vega-7 cadet board · Nebula</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Unbounded:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #15153a;
+    --panel: #20204f;
+    --panel-edge: #2e2e66;
+    --star: #eceaf7;
+    --haze: #a29fcc;
+    --beacon: #ffb547;
+    --ion: #5fd4c4;
+    --display: "Unbounded", "Trebuchet MS", sans-serif;
+    --body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--void); }
+  body {
+    margin: 0; color: var(--star); font-family: var(--body); font-size: 17px; line-height: 1.5;
+    background:
+      radial-gradient(1px 1px at 12% 18%, #fff8 50%, transparent 51%),
+      radial-gradient(1px 1px at 78% 9%, #fff6 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 64% 72%, #fff5 50%, transparent 51%),
+      radial-gradient(1px 1px at 31% 83%, #fff6 50%, transparent 51%),
+      radial-gradient(1px 1px at 91% 54%, #fff7 50%, transparent 51%),
+      var(--void);
+    min-height: 100vh;
+  }
+  a { color: var(--ion); }
+  :focus-visible { outline: 2px solid var(--beacon); outline-offset: 3px; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 28px 64px; }
+
+  header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; margin-bottom: 28px; }
+  h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 4.6vw, 3.6rem); line-height: 1; margin: 0; letter-spacing: -0.02em; }
+  .subtitle { color: var(--haze); margin: 10px 0 0; font-size: 1.05rem; }
+  .pulse-line { display: flex; gap: 28px; color: var(--haze); font-size: 0.98rem; }
+  .pulse-line strong { color: var(--star); font-family: var(--display); font-weight: 600; font-size: 1.3rem; display: block; line-height: 1.1; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  /* --- orbit map: the one bold element --- */
+  .orbit-card { position: relative; }
+  .orbit-card svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .ring { fill: none; stroke: var(--panel-edge); stroke-width: 1; }
+  .ring.outer { stroke: #3d3d80; stroke-dasharray: 2 6; }
+  .ring-label { fill: var(--haze); font-family: var(--body); font-size: 11px; }
+  .station-core { fill: var(--panel); stroke: var(--ion); stroke-width: 1.5; }
+  .station-name { fill: var(--star); font-family: var(--display); font-weight: 600; font-size: 13px; text-anchor: middle; }
+  .ship { transition: transform 1.6s cubic-bezier(.2,.8,.2,1); }
+  .ship circle { fill: var(--star); }
+  .ship.done circle { fill: var(--ion); }
+  .ship.lead circle { fill: var(--beacon); }
+  .ship text { fill: var(--star); font-family: var(--body); font-weight: 700; font-size: 12px; paint-order: stroke; stroke: var(--void); stroke-width: 4px; }
+  .ship.lead text { fill: var(--beacon); }
+  .orbit-legend { display: flex; flex-wrap: wrap; gap: 18px; color: var(--haze); font-size: 0.9rem; margin-top: 8px; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+  section h2 { font-family: var(--display); font-weight: 600; font-size: 1.25rem; margin: 0 0 14px; letter-spacing: -0.01em; }
+  .panel { background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 18px; padding: 22px 24px; }
+  .stack { display: grid; gap: 28px; }
+
+  /* podium */
+  .podium { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .podium li { display: grid; grid-template-columns: 2.2rem 1fr auto; align-items: baseline; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--panel-edge); }
+  .podium li:last-child { border-bottom: 0; }
+  .podium .pos { font-family: var(--display); font-weight: 800; font-size: 1.5rem; color: var(--haze); }
+  .podium li.first .pos, .podium li.first .pts { color: var(--beacon); }
+  .podium .name { font-weight: 700; font-size: 1.15rem; overflow-wrap: anywhere; }
+  .podium .pts { font-family: var(--display); font-weight: 600; font-size: 1.15rem; }
+
+  /* feed */
+  .feed { list-style: none; margin: 0; padding: 0; max-height: 340px; overflow: auto; }
+  .feed li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 9px 0; border-bottom: 1px solid var(--panel-edge); }
+  .feed li:last-child { border-bottom: 0; }
+  .feed .what { overflow-wrap: anywhere; }
+  .feed .what b { color: var(--star); }
+  .feed .gain { color: var(--beacon); font-weight: 700; }
+  .feed .when { color: var(--haze); font-size: 0.88rem; grid-column: 1 / -1; }
+  .feed li.fresh { animation: flare 2.4s ease-out 1; }
+  @keyframes flare { 0% { background: #ffb54733; } 100% { background: transparent; } }
+
+  /* ranking table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+  caption { text-align: left; }
+  th { text-align: left; color: var(--haze); font-weight: 400; font-size: 0.92rem; padding: 0 12px 10px; white-space: nowrap; }
+  td { padding: 11px 12px; border-top: 1px solid var(--panel-edge); vertical-align: middle; }
+  td.rank { font-family: var(--display); font-weight: 600; color: var(--haze); width: 3rem; }
+  tr.top1 td.rank { color: var(--beacon); }
+  td.alias { font-weight: 700; min-width: 7.5rem; overflow-wrap: break-word; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.num { text-align: right; }
+  .bar { position: relative; height: 8px; border-radius: 4px; background: #2b2b62; min-width: 120px; }
+  .bar span { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--beacon); }
+  .pointcell { display: grid; grid-template-columns: 3.6rem 1fr; gap: 12px; align-items: center; }
+  .pointcell b { font-family: var(--display); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .segs { display: flex; gap: 10px; flex-wrap: wrap; }
+  .seg-group { display: flex; gap: 3px; }
+  .seg { width: 10px; height: 14px; border-radius: 3px; background: #2f2f6a; }
+  .seg.on { background: var(--ion); }
+
+  /* challenge board */
+  .labs { display: grid; gap: 22px; }
+  .lab h3 { font-size: 1.05rem; margin: 0 0 10px; font-weight: 700; }
+  .lab h3 small { color: var(--haze); font-weight: 400; margin-left: 8px; }
+  .chal { display: grid; grid-template-columns: minmax(10rem, 1.2fr) 4rem minmax(120px, 2fr) 6.5rem; gap: 14px; align-items: center; padding: 7px 0; }
+  .chal .bar span { background: var(--ion); }
+  .chal .pv { color: var(--haze); text-align: right; font-variant-numeric: tabular-nums; }
+  .chal .count { color: var(--haze); text-align: right; font-size: 0.92rem; }
+  @media (max-width: 640px) { .chal { grid-template-columns: 1fr auto; } .chal .bar { grid-column: 1 / -1; } .chal .pv { display: none; } }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 22px 16px 48px; }
+    th:nth-child(5), td:nth-child(5), th:nth-child(6), td:nth-child(6) { display: none; }
+    .bar { min-width: 56px; }
+    .pointcell { grid-template-columns: 3rem 1fr; gap: 8px; }
+    td, th { padding-left: 6px; padding-right: 6px; }
+    .pulse-line { gap: 18px; }
+  }
+  .empty { color: var(--haze); padding: 8px 0; }
+  .empty code { color: var(--star); background: #2b2b62; padding: 1px 6px; border-radius: 6px; }
+  footer { color: var(--haze); font-size: 0.88rem; margin-top: 40px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ship { transition: none; }
+    .feed li.fresh { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Vega-7 cadet board</h1>
+      <p class="subtitle">Nebula Security Operations Office. <span id="updated">Waiting for the first transmission...</span></p>
+    </div>
+    <div class="pulse-line" aria-live="polite">
+      <div><strong id="stat-cadets">0</strong>cadets aboard</div>
+      <div><strong id="stat-flags">0</strong>flags captured</div>
+      <div><strong id="stat-done">0</strong>missions complete</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel orbit-card" aria-labelledby="orbit-title">
+      <h2 id="orbit-title">The crew in orbit</h2>
+      <svg id="orbit" viewBox="0 0 640 640" role="img" aria-label="Orbit map: each cadet is a ship, the more points the farther from the station."></svg>
+      <div class="orbit-legend">
+        <span><i class="dot" style="background:var(--beacon)"></i>Top 3</span>
+        <span><i class="dot" style="background:var(--ion)"></i>Every flag captured</span>
+        <span><i class="dot" style="background:var(--star)"></i>On the way</span>
+        <span>More points, farther from the station.</span>
+      </div>
+    </section>
+
+    <div class="stack">
+      <section class="panel" aria-labelledby="lead-title">
+        <h2 id="lead-title">Leading the crew</h2>
+        <ol class="podium" id="podium"></ol>
+      </section>
+      <section class="panel" aria-labelledby="feed-title">
+        <h2 id="feed-title">Latest captures</h2>
+        <ul class="feed" id="feed" aria-live="polite"></ul>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel" style="margin-top:28px" aria-labelledby="rank-title">
+    <h2 id="rank-title">Full ranking</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr id="rank-head"><th>Rank</th><th>Agent</th><th>Points</th><th class="num">Flags</th><th class="num">Hints</th><th>Progress by lab</th></tr></thead>
+        <tbody id="rank-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-top:28px" aria-labelledby="chal-title">
+    <h2 id="chal-title">Where the crew is</h2>
+    <div class="labs" id="labs"></div>
+  </section>
+
+  <footer>Refreshes every minute. HQ verifies every flag before it counts.</footer>
+</div>
+
+<script>
+(() => {
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const C = 320, R0 = 62, RMAX = 286;
+  let seen = null;  // keys of feed items already shown
+  let firstDraw = true;
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function ago(iso) {
+    if (!iso) return "";
+    const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
+    if (s < 60) return "just now";
+    const m = Math.round(s / 60);
+    if (m < 60) return `${m} min ago`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h} h ago`;
+    return `${Math.round(h / 24)} d ago`;
+  }
+
+  function angleFor(id) {               // stable position around the orbit
+    let h = 0;
+    for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return (h % 3600) / 10;
+  }
+
+  function el(tag, attrs = {}, parent) {
+    const n = document.createElementNS(SVGNS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  function drawOrbit(d) {
+    const svg = $("orbit");
+    svg.innerHTML = "";
+    const max = d.max_points || 1;
+    [0.25, 0.5, 0.75, 1].forEach((f) => {
+      const r = R0 + f * (RMAX - R0);
+      el("circle", { cx: C, cy: C, r, class: "ring" + (f === 1 ? " outer" : "") }, svg);
+      const t = el("text", { x: C + 6, y: C - r - 6, class: "ring-label" }, svg);
+      t.textContent = `${Math.round(f * max)} pts`;
+    });
+    el("circle", { cx: C, cy: C, r: 40, class: "station-core" }, svg);
+    const name = el("text", { x: C, y: C + 5, class: "station-name" }, svg);
+    name.textContent = d.station || "VEGA-7";
+
+    const ships = el("g", {}, svg);
+    d.players.forEach((p) => {
+      const r = R0 + (p.points / max) * (RMAX - R0);
+      const a = angleFor(p.id);
+      const cls = ["ship"];
+      if (p.rank <= 3 && p.points > 0) cls.push("lead");
+      else if (p.points >= max) cls.push("done");
+      const g = el("g", { class: cls.join(" ") }, ships);
+      const title = el("title", {}, g);
+      title.textContent = `${p.alias}: ${p.points} pts`;
+      el("circle", { r: p.rank <= 3 && p.points > 0 ? 7 : 5 }, g);
+      if (p.rank <= 3 && p.points > 0) {
+        const t = el("text", { x: 11, y: 4 }, g);
+        t.textContent = p.alias;
+      }
+      const x = C + r * Math.cos(a * Math.PI / 180), y = C + r * Math.sin(a * Math.PI / 180);
+      const target = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+      if (firstDraw) {               // the one launch moment: ships leave the station
+        g.style.transform = `translate(${C}px, ${C}px)`;
+        requestAnimationFrame(() => requestAnimationFrame(() => { g.style.transform = target; }));
+      } else {
+        g.style.transition = "none";
+        g.style.transform = target;
+      }
+    });
+  }
+
+  function drawPodium(d) {
+    const top = d.players.filter((p) => p.points > 0).slice(0, 5);
+    $("podium").innerHTML = top.length ? top.map((p) =>
+      `<li class="${p.rank === 1 ? "first" : ""}"><span class="pos">${p.rank}</span><span class="name">${esc(p.alias)}</span><span class="pts">${p.points}</span></li>`).join("")
+      : `<li class="empty">No flags yet. The first capture takes the lead.</li>`;
+  }
+
+  function drawFeed(d) {
+    const first = seen === null;
+    const next = new Set();
+    $("feed").innerHTML = d.feed.length ? d.feed.map((f) => {
+      const k = `${f.alias}|${f.challenge}`;
+      next.add(k);
+      const fresh = !first && !seen.has(k) ? " fresh" : "";
+      return `<li class="${fresh.trim()}"><span class="what"><b>${esc(f.alias)}</b> captured ${esc(f.title)}</span><span class="gain">+${f.points}</span><span class="when">${ago(f.ts)}</span></li>`;
+    }).join("") : `<li class="empty">Nothing yet. Captures appear here a few minutes after they are submitted.</li>`;
+    seen = next;
+  }
+
+  function drawTable(d) {
+    const head = $("rank-head").lastElementChild;
+    head.textContent = "Progress by lab";
+    if (!d.players.length) {
+      $("rank-body").innerHTML = `<tr><td colspan="6" class="empty">No cadets yet. In your Codespace run <code>ctf register</code>, then invite the HQ account to your repository.</td></tr>`;
+      return;
+    }
+    const max = d.max_points || 1;
+    $("rank-body").innerHTML = d.players.map((p) => {
+      const solved = new Set(p.solved);
+      const segs = d.labs.map((lab) =>
+        `<span class="seg-group" title="${esc(lab.title)}">${lab.challenges.map((c) =>
+          `<i class="seg${solved.has(c.id) ? " on" : ""}" title="${esc(c.title)}"></i>`).join("")}</span>`).join("");
+      return `<tr class="${p.rank === 1 && p.points ? "top1" : ""}">
+        <td class="rank">${p.rank}</td>
+        <td class="alias">${esc(p.alias)}</td>
+        <td><div class="pointcell"><b>${p.points}</b><div class="bar" aria-hidden="true"><span style="width:${(100 * p.points / max).toFixed(1)}%"></span></div></div></td>
+        <td class="num">${p.flags}</td>
+        <td class="num">${p.hints}</td>
+        <td><div class="segs" aria-label="${p.flags} flags">${segs}</div></td>
+      </tr>`;
+    }).join("");
+  }
+
+  function drawLabs(d) {
+    const n = Math.max(1, d.players.length);
+    $("labs").innerHTML = d.labs.map((lab) => `
+      <div class="lab">
+        <h3>${esc(lab.title)}<small>${lab.day ? "Day " + lab.day : ""}</small></h3>
+        ${lab.challenges.map((c) => `
+          <div class="chal">
+            <span>${esc(c.title)}</span>
+            <span class="pv">${c.points} pts</span>
+            <div class="bar" aria-hidden="true"><span style="width:${(100 * c.solves / n).toFixed(1)}%"></span></div>
+            <span class="count">${c.solves} of ${d.players.length}</span>
+          </div>`).join("")}
+      </div>`).join("");
+  }
+
+  function drawStats(d) {
+    $("stat-cadets").textContent = d.players.length;
+    $("stat-flags").textContent = d.players.reduce((s, p) => s + p.flags, 0);
+    $("stat-done").textContent = d.players.filter((p) => p.points >= d.max_points && d.max_points > 0).length;
+    $("updated").textContent = `Last update from HQ ${ago(d.generated_at)}.`;
+  }
+
+  async function load() {
+    try {
+      const r = await fetch(`data.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      drawStats(d); drawOrbit(d); drawPodium(d); drawFeed(d); drawTable(d); drawLabs(d);
+      firstDraw = false;
+    } catch (e) {
+      $("updated").textContent = "HQ is not reachable right now. Retrying in a minute.";
+    }
+  }
+  load();
+  setInterval(load, 60000);
+})();
+</script>
+</body>
+</html>
